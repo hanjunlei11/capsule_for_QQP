@@ -1,0 +1,10 @@
+batch_size = 70
+embadding_size = 300
+vocab_size = 106623
+hidden_size = 200
+batch_len = 26
+word_length = 16
+char_size = 279
+embadding_char_size = 100
+LSTM_number = 6
+learning_rate = 0.001
