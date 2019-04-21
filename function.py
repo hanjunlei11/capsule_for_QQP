@@ -171,8 +171,10 @@ def Dynamic_LSTM(input_s1,input_s2,keep_rate,training,name):
         lstm_output_s1 = tf.layers.batch_normalization(inputs=lstm_output_s1, training=training)
         lstm_output_s2 = tf.layers.batch_normalization(inputs=lstm_output_s2, training=training)
     attention_s1,attention_s2 = co_attention(lstm_output_s1,lstm_output_s2)
-    concat_s1 = tf.concat([input_s1, lstm_output_s1], axis=-1)
-    concat_s2 = tf.concat([input_s2, lstm_output_s2,attention_s2], axis=-1)
+    attention_s1, attention_s2 = co_attention(attention_s1,attention_s2)
+    attention_s1, attention_s2 = co_attention(attention_s1,attention_s2)
+    concat_s1 = tf.concat([input_s1, attention_s1], axis=-1)
+    concat_s2 = tf.concat([input_s2, attention_s2], axis=-1)
     auto_encoder_1 = fully_conacation(concat_s1, hidden_size, keep_rate=keep_rate)
     auto_encoder_2 = fully_conacation(concat_s2, hidden_size, keep_rate=keep_rate)
     decoder_s1_1 = fully_conacation(auto_encoder_1, haddin_size=concat_s1.shape[-1], keep_rate=keep_rate)
@@ -192,13 +194,13 @@ def co_attention(s1,s2):
     matrix_1 = tf.matmul(s1, tf.transpose(s2, perm=[0, 2, 1]))
     matrix_2 = tf.expand_dims(tf.sqrt(tf.reduce_sum(tf.square(s1), axis=-1)), axis=-1)
     matrix_3 = tf.expand_dims(tf.sqrt(tf.reduce_sum(tf.square(s2), axis=-1)), axis=1)
-    cosin_matrix_s1 = tf.div(matrix_1, tf.matmul(matrix_2, matrix_3))
-    # 计算相似矩阵权重
-    cosin_matrix_s1 = tf.nn.softmax(cosin_matrix_s1, dim=-1)
-    cosin_matrix_s2 = tf.transpose(cosin_matrix_s1, perm=[0, 2, 1])
-    cosin_matrix_s2 = tf.nn.softmax(cosin_matrix_s2, dim=-1)
-    a_s2 = tf.matmul(cosin_matrix_s1, s2)
-    a_s1 = tf.matmul(cosin_matrix_s2, s1)
+    cosin_matrix = tf.div(matrix_1, tf.matmul(matrix_2, matrix_3))
+
+    softmax_s1 = tf.nn.softmax(tf.reduce_mean(cosin_matrix, axis=-1, keep_dims=True), dim=-1)
+    cosin_matrix_s2 = tf.transpose(cosin_matrix, perm=[0, 2, 1])
+    softmax_s2 = tf.nn.softmax(tf.reduce_mean(cosin_matrix_s2, axis=-1, keep_dims=True), dim=-1)
+    a_s2 = tf.multiply(softmax_s2, s2)
+    a_s1 = tf.multiply(softmax_s1, s1)
 
     return a_s1, a_s2
 

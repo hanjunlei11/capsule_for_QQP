@@ -4,6 +4,7 @@ from config import *
 # -*- coding: utf-8 -*-
 import csv
 import collections
+import random
 
 # file = open('./test.txt','w+',encoding='utf-8')
 
@@ -75,15 +76,32 @@ def get_data(filepath):
             out_vecab.write(item[0]+' '+str(item[1])+'\n')
 
 def get_epoch(batch_size,s1,s2,label):
-    pass
+    data_s1 = s1
+    data_s2 = s2
+    data_label = label
+    epoch_s1 = []
+    epoch_s2 = []
+    epoch_label = []
+    list_int = [i for i in range(len(data_label))]
+    while len(list_int)>batch_size:
+        random_int = random.sample(list_int, batch_size)
+        batch_s1 = np.asarray(data_s1)[random_int]
+        batch_s2 = np.asarray(data_s2)[random_int]
+        batch_label = np.asarray(data_label)[random_int]
+        random_int = list(random_int)
+        random_int.sort(reverse=True)
+        for i in random_int:
+            list_int.remove(i)
+        epoch_s1.append(batch_s1)
+        epoch_s2.append(batch_s2)
+        epoch_label.append(batch_label)
+    return epoch_s1,epoch_s2,epoch_label,len(epoch_s1)
 
-def get_batch(batch_size, s1, s2,label):
-    random_int = np.random.randint(0,len(s1)-1,batch_size)
-    batch_s1 = np.asarray(s1)[random_int]
-    batch_s2 = np.asarray(s2)[random_int]
-    batch_label = np.asarray(label)[random_int]
-
-    return batch_s1, batch_s2, batch_label,random_int
+def get_batch(s1, s2, label, i):
+    batch_s1 = s1[i]
+    batch_s2 = s2[i]
+    batch_label = label[i]
+    return batch_s1, batch_s2, batch_label
 
 def read_file(s1path, s2path, labelpath,re_vector):
     f_s1 = open(s1path, 'r', encoding='utf-8')

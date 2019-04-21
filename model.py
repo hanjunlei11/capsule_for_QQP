@@ -22,9 +22,13 @@ class Model():
             embedding_table = tf.Variable(embadding_re,trainable=False, name='word_embedding',dtype=tf.float32)
             self.s1_matrix_tr = tf.nn.embedding_lookup(embedding_table, self.s1)
             self.s2_matrix_tr = tf.nn.embedding_lookup(embedding_table, self.s2)
-
+            embedding = tf.Variable(tf.random_uniform([self.voca_size, self.embedding_size]),trainable=True,dtype=tf.float32,name='embeding')
+            self.s1_matrix = tf.nn.embedding_lookup(embedding, self.s1)
+            self.s2_matrix = tf.nn.embedding_lookup(embedding, self.s2)
+            self.s1_concat = tf.concat([self.s1_matrix_tr,self.s1_matrix],axis=-1)
+            self.s2_concat = tf.concat([self.s2_matrix_tr,self.s2_matrix],axis=-1)
         with tf.name_scope("decoder"):
-            self.encoder_1_s1, self.encoder_1_s2 = Dynamic_LSTM(self.s1_matrix_tr,self.s2_matrix_tr,keep_rate=self.keep_rate,training=self.is_training,name='decoder1')
+            self.encoder_1_s1, self.encoder_1_s2 = Dynamic_LSTM(self.s1_concat,self.s2_concat,keep_rate=self.keep_rate,training=self.is_training,name='decoder1')
             self.encoder_2_s1, self.encoder_2_s2 = Dynamic_LSTM(self.encoder_1_s1,self.encoder_1_s2, keep_rate=self.keep_rate,training=self.is_training,name='decoder2')
             self.encoder_3_s1, self.encoder_3_s2 = Dynamic_LSTM(self.encoder_2_s1,self.encoder_2_s2, keep_rate=self.keep_rate,training=self.is_training, name='decoder3')
 
