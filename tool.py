@@ -98,9 +98,9 @@ def get_epoch(batch_size,s1,s2,label):
     return epoch_s1,epoch_s2,epoch_label,len(epoch_s1)
 
 def get_batch(s1, s2, label, i):
-    batch_s1 = s1[i]
-    batch_s2 = s2[i]
-    batch_label = label[i]
+    batch_s1 = np.asarray(s1)[i]
+    batch_s2 = np.asarray(s2)[i]
+    batch_label = np.asarray(label)[i]
     return batch_s1, batch_s2, batch_label
 
 def read_file(s1path, s2path, labelpath,re_vector):
