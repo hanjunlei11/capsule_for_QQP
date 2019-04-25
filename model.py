@@ -10,12 +10,18 @@ class Model():
         self.embedding_size = embadding_size
         self.voca_size = vocab_size
         self.learnning_rate = learning_rate
+        self.char_size = char_size
+        self.embedding_char_size = embadding_char_size
+        self.word_length = word_length
 
         with tf.name_scope('input'):
             self.s1 = tf.placeholder(dtype=tf.int32,shape=(self.batch_size,self.batch_len),name='s1_input')
             self.s2 = tf.placeholder(dtype=tf.int32,shape=(self.batch_size,self.batch_len),name='s2_input')
+            self.input_char_s1 = tf.placeholder(dtype=tf.int32,shape=(self.batch_size, self.batch_len, self.word_length),name='char_s1')
+            self.input_char_s2 = tf.placeholder(dtype=tf.int32,shape=(self.batch_size, self.batch_len, self.word_length),name='char_s2')
             self.label = tf.placeholder(dtype=tf.int64,shape=(None),name='label')
             self.keep_rate = tf.placeholder(dtype=tf.float32,shape=(None),name='keep_rate')
+            # self.embedding_keep_rate = tf.placeholder(dtype=tf.float32,shape=(None),name='embedding_keeprate')
             self.is_training = tf.placeholder(dtype=tf.bool,shape=(None),name='training')
 
         with tf.name_scope('embedding'):
@@ -25,8 +31,27 @@ class Model():
             embedding = tf.Variable(tf.random_uniform([self.voca_size, self.embedding_size]),trainable=True,dtype=tf.float32,name='embeding')
             self.s1_matrix = tf.nn.embedding_lookup(embedding, self.s1)
             self.s2_matrix = tf.nn.embedding_lookup(embedding, self.s2)
-            self.s1_concat = tf.concat([self.s1_matrix_tr,self.s1_matrix],axis=-1)
-            self.s2_concat = tf.concat([self.s2_matrix_tr,self.s2_matrix],axis=-1)
+
+        with tf.name_scope('char_embedding'):
+            embedding_char = tf.Variable(tf.random_uniform([self.char_size, self.embedding_char_size], dtype=tf.float32), trainable=True,
+                name='char_embedding')
+            s1_char_embedding = tf.nn.embedding_lookup(embedding_char, self.input_char_s1)
+            s2_char_embedding = tf.nn.embedding_lookup(embedding_char, self.input_char_s2)
+            # self.s1_char_conv_out = tf.nn.dropout(s1_char_embedding, keep_prob=self.embedding_keep_rate)
+            # self.s2_char_conv_out = tf.nn.dropout(s2_char_embedding, keep_prob=self.embedding_keep_rate)
+            self.s1_char_conv_out = conv2D(inputs=s1_char_embedding, kernel_shape=[1, 5, 100, 100],
+                                                strides=[1, 1, 1, 1],trainning=self.is_training, padding='VALID', kernel_name='char_kernel1')
+            self.s1_char_conv_out = tf.layers.max_pooling2d(inputs=self.s1_char_conv_out, pool_size=[1, 12],
+                                                            strides=[1, 1])
+            self.s1_char_conv_out = tf.reduce_mean(self.s1_char_conv_out, axis=2)
+            self.s2_char_conv_out = conv2D(inputs=s2_char_embedding, kernel_shape=[1, 5, 100, 100],
+                                                strides=[1, 1, 1, 1],trainning=self.is_training, padding='VALID', kernel_name='char_kernel2')
+            self.s2_char_conv_out = tf.layers.max_pooling2d(inputs=self.s2_char_conv_out, pool_size=[1, 12],
+                                                            strides=[1, 1])
+            self.s2_char_conv_out = tf.reduce_mean(self.s2_char_conv_out, axis=2)
+            self.s1_concat = tf.concat([self.s1_matrix_tr, self.s1_matrix,self.s1_char_conv_out], axis=-1)
+            self.s2_concat = tf.concat([self.s2_matrix_tr, self.s2_matrix,self.s2_char_conv_out], axis=-1)
+
         with tf.name_scope("decoder"):
             self.encoder_1_s1, self.encoder_1_s2 = Dynamic_LSTM(self.s1_concat,self.s2_concat,keep_rate=self.keep_rate,training=self.is_training,name='decoder1')
             self.encoder_2_s1, self.encoder_2_s2 = Dynamic_LSTM(self.encoder_1_s1,self.encoder_1_s2, keep_rate=self.keep_rate,training=self.is_training,name='decoder2')

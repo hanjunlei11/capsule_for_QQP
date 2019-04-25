@@ -9,7 +9,7 @@ import random
 # file = open('./test.txt','w+',encoding='utf-8')
 
 def get_data(filepath):
-    with open(filepath,'r',encoding='utf-8',errors='ignore') as data,open('./data/s1.txt','w+', encoding='ANSI',errors='ignore') as s1, open('./data/s2.txt', 'w+', encoding='ANSI',errors='ignore') as s2, open('./data/label.txt', 'w+', encoding='ANSI',errors='ignore') as label, open('./data/word2index.txt','w+',encoding='ANSI',errors='ignore') as word_index,open('./data/vector.txt','w+',encoding='utf-8',errors='ignore') as vector,open('./data/out_of_vecab.txt','w+',encoding='utf-8',errors='ignore') as out_vecab:
+    with open(filepath,'r',encoding='utf-8',errors='ignore') as data,open('./data/s1.txt','w+', encoding='ANSI',errors='ignore') as s1, open('./data/s2.txt', 'w+', encoding='ANSI',errors='ignore') as s2, open('./data/label.txt', 'w+', encoding='ANSI',errors='ignore') as label, open('./data/word2index.txt','w+',encoding='ANSI',errors='ignore') as word_index,open('./data/vector.txt','w+',encoding='utf-8',errors='ignore') as vector,open('./data/out_of_vecab.txt','w+',encoding='utf-8',errors='ignore') as out_vecab,open('./data/s1_char.txt','w+',encoding='utf-8') as char_s1,open('./data/s2_char.txt','w+',encoding='utf-8') as char_s2:
         data_lines = csv.reader(data)
         # stop_words = stopwords.readlines()
         r1 = "[\�\!\_,$\"%^*(+]+|[+！\”\“，\‘。？、~@#￥%&*（）;\’?:`>><()]+"
@@ -19,8 +19,6 @@ def get_data(filepath):
         embedding_table = load_vector('./data/glove.840B.300d.txt')
         s = 0
         for i in data_lines:
-            s+=1
-            print('第',s,'行')
             ss1 = i[3].lower()
             ss2 = i[4].lower()
             # ss1 = ss1.replace('\'','')
@@ -39,6 +37,10 @@ def get_data(filepath):
                 continue
             else:
                 label.write(i[5]+'\n')
+                char_s1.write(' '.join(ss1) + '\n')
+                char_s2.write(' '.join(ss2) + '\n')
+            s += 1
+            print('第', s, '行')
             for j in range(len(ss1)):
                 if ss1[j] not in embedding_table:
                     if ss1[j] not in out_of_vocab:
@@ -97,11 +99,13 @@ def get_epoch(batch_size,s1,s2,label):
         epoch_label.append(batch_label)
     return epoch_s1,epoch_s2,epoch_label,len(epoch_s1)
 
-def get_batch(s1, s2, label, i):
+def get_batch(s1, s2, label,s1_char,s2_char, i):
     batch_s1 = np.asarray(s1)[i]
     batch_s2 = np.asarray(s2)[i]
     batch_label = np.asarray(label)[i]
-    return batch_s1, batch_s2, batch_label
+    batch_s1_char = np.asarray(s1_char)[i]
+    batch_s2_char = np.asarray(s2_char)[i]
+    return batch_s1, batch_s2, batch_label,batch_s1_char,batch_s2_char
 
 def read_file(s1path, s2path, labelpath,re_vector):
     f_s1 = open(s1path, 'r', encoding='utf-8')

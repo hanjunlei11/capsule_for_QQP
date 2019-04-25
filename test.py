@@ -1,28 +1,21 @@
 import tensorflow as tf
 from config import *
+from function import *
 from tool import *
 import random
-# s1 = tf.get_variable(dtype=tf.float32, shape=[20,10,200], name='s1')
-# s2 = tf.get_variable(dtype=tf.float32, shape=[20,20,200], name='s2')
-# matrix_1 = tf.matmul(s1, tf.transpose(s2, perm=[0, 2, 1]))
-# matrix_2 = tf.expand_dims(tf.sqrt(tf.reduce_sum(tf.square(s1), axis=-1)), axis=-1)
-# matrix_3 = tf.expand_dims(tf.sqrt(tf.reduce_sum(tf.square(s2), axis=-1)), axis=1)
-# cosin_matrix = tf.div(matrix_1, tf.matmul(matrix_2, matrix_3))
-#
-# softmax_s1 = tf.nn.softmax(tf.reduce_mean(cosin_matrix,axis=-1,keep_dims=True), dim=-1)
-# cosin_matrix_s2 = tf.transpose(cosin_matrix, perm=[0, 2, 1])
-# softmax_s2 = tf.nn.softmax(tf.reduce_mean(cosin_matrix_s2,axis=-1,keep_dims=True), dim=-1)
-# a_s2 = tf.multiply(softmax_s2, s2)
-# a_s1 = tf.multiply(softmax_s1, s1)
-s1 = np.array([1,2,3,4,5,6,7,8])
-int_ran = random.sample([i for i in range(len(s1))],3)
-print(int_ran)
-print(s1[int_ran])
-# print(a_s2)
-# print(a_s1)
+s1 = tf.get_variable(dtype=tf.float32,shape=[70,26,16,100],name='s1')
+# cell_f_1 = tf.nn.rnn_cell.BasicLSTMCell(num_units=5,reuse=tf.AUTO_REUSE,activation=tf.keras.layers.LeakyReLU())
+# cell_b_1 = tf.nn.rnn_cell.BasicLSTMCell(num_units=5,reuse=tf.AUTO_REUSE,activation=tf.keras.layers.LeakyReLU())
+# cell_z_f = cell_f_1.zero_state(batch_size=1,dtype=tf.float32)
+# cell_z_b = cell_b_1.zero_state(batch_size=1,dtype=tf.float32)
+# lstm_output_s1, _ = tf.nn.bidirectional_dynamic_rnn(cell_f_1, cell_b_1,inputs=s1,dtype=tf.float32,initial_state_fw=cell_z_f,initial_state_bw=cell_z_b)
+# tv = tf.trainable_variables()
+# K = tf.keras.layers.LeakyReLU()
+k = conv2D(s1,kernel_shape=[1,5,100,100],strides=[1,1,1,1],trainning=True,padding='VALID',kernel_name='conv1')
+print(k)
 
-# with tf.Session() as sess:
-#     init = tf.global_variables_initializer()
-#     sess.run(init)
-#     sess.run(matrix_1)
+with tf.Session() as sess:
+    init = tf.global_variables_initializer()
+    sess.run(init)
+    sess.run(k)
 

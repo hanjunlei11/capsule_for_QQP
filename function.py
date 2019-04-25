@@ -3,10 +3,10 @@ from config import *
 from tool import *
 
 
-def conv2D(inputs, kernel_shape, strides, padding, kernel_name, activation='relu', dropuot_rate=None):
+def conv2D(inputs, kernel_shape, strides, padding, kernel_name,trainning, activation='leaky_relu', dropuot_rate=None):
     kernel = tf.get_variable(dtype=tf.float32, shape=kernel_shape, name=kernel_name)
     conv_output = tf.nn.conv2d(input=inputs, filter=kernel, strides=strides, padding=padding)
-    # conv_output = tf.layers.batch_normalization(inputs=conv_output, training=self.is_traning)
+    conv_output = tf.layers.batch_normalization(inputs=conv_output, training=trainning)
     if activation == 'relu':
         conv_output = tf.nn.relu(conv_output)
     if activation == 'leaky_relu':
@@ -162,12 +162,14 @@ def Dynamic_LSTM(input_s1,input_s2,keep_rate,training,name):
                                                                    dtype=tf.float32)
         lstm_fw_s1, lstm_bw_s1 = lstm_output_s1
         lstm_output_s1 = tf.concat([lstm_fw_s1, lstm_bw_s1], axis=-1)
+        lstm_output_s1 = tf.nn.leaky_relu(lstm_output_s1)
     # with tf.variable_scope("lst_"+str(name)+"_2"):
         lstm_output_s2, _ = tf.nn.bidirectional_dynamic_rnn(cell_f_1, cell_b_1,
                                                                    inputs=input_s2,
                                                                    dtype=tf.float32)
         lstm_fw_s2, lstm_bw_s2 = lstm_output_s2
         lstm_output_s2 = tf.concat([lstm_fw_s2, lstm_bw_s2], axis=-1)
+        lstm_output_s2 = tf.nn.leaky_relu(lstm_output_s2)
         lstm_output_s1 = tf.layers.batch_normalization(inputs=lstm_output_s1, training=training)
         lstm_output_s2 = tf.layers.batch_normalization(inputs=lstm_output_s2, training=training)
     attention_s1,attention_s2 = co_attention(lstm_output_s1,lstm_output_s2)
@@ -201,10 +203,12 @@ def co_attention(s1,s2):
     softmax_s2 = tf.nn.softmax(tf.reduce_mean(cosin_matrix_s2, axis=-1, keep_dims=True), dim=-1)
     a_s2 = tf.multiply(softmax_s2, s2)
     a_s1 = tf.multiply(softmax_s1, s1)
+    a_s1 = tf.nn.leaky_relu(a_s1)
+    a_s2 = tf.nn.leaky_relu(a_s2)
 
     return a_s1, a_s2
 
-def fully_conacation(input,haddin_size,training=True,keep_rate=1.0,activation='relu'):
+def fully_conacation(input,haddin_size,training=True,keep_rate=1.0,activation='leaky_relu'):
     dense_out = tf.layers.dense(inputs=input, units=haddin_size)
     dense_out = tf.layers.batch_normalization(inputs=dense_out, training=training)
     if activation == 'relu':
